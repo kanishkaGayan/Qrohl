@@ -1,15 +1,11 @@
-name: Build and Package
+name: Build Windows AppX
 
 on:
   push:
     branches:
       - main
-      - develop
     tags:
       - 'v*'
-  pull_request:
-    branches:
-      - main
 
 permissions:
   contents: write
@@ -34,81 +30,23 @@ jobs:
       - name: Generate Prisma client
         run: npm run prisma:generate
       
-      - name: Build Windows AppX package
-        run: npm run build:electron
+      - name: Build Next.js + Electron
+        run: npm run build && npm run prepare:packaging && npm run electron:assets
       
-      - name: Upload Windows packages (AppX + NSIS)
+      - name: Build AppX package
+        run: npx electron-builder --win appx --publish never
+      
+      - name: Upload AppX artifact
         uses: actions/upload-artifact@v4
         with:
-          name: windows-packages
-          path: |
-            dist/*.appx
-            dist/*.exe
+          name: qrohl-appx
+          path: dist/*.appx
           retention-days: 30
       
       - name: Create Release (on tag)
         if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v1
         with:
-          files: |
-            dist/*.appx
-            dist/*.exe
+          files: dist/*.appx
           draft: false
           prerelease: ${{ contains(github.ref, 'alpha') || contains(github.ref, 'beta') }}
-
-  build-appimage:
-    name: Build Linux AppImage
-    runs-on: ubuntu-latest
-    
-    steps:
-      - uses: actions/checkout@v4
-      
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-      
-      - name: Install dependencies
-        run: npm install
-      
-      - name: Generate Prisma client
-        run: npm run prisma:generate
-      
-      - name: Build Linux AppImage
-        run: npm run build:appimage
-      
-      - name: Upload AppImage artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: linux-packages
-          path: dist/*.AppImage
-          retention-days: 30
-      
-      - name: Create Release (on tag)
-        if: startsWith(github.ref, 'refs/tags/v')
-        uses: softprops/action-gh-release@v1
-        with:
-          files: dist/*.AppImage
-          draft: false
-          prerelease: ${{ contains(github.ref, 'alpha') || contains(github.ref, 'beta') }}
-
-  cleanup:
-    name: Cleanup dist folder
-    runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      
-      - name: Remove dist from git history
-        run: |
-          git rm -r --cached dist/ || true
-          git config user.email "build@github.com"
-          git config user.name "GitHub Build"
-          git commit -m "chore: remove dist/ artifacts from tracking" || true
-      
-      - name: Push cleanup commit
-        run: git push origin main
