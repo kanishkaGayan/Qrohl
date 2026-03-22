@@ -1,36 +1,106 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Qrohl
+
+**The Whole Package for QR and Barcodes.**
+
+Qrohl is a Next.js + Prisma QR/Barcode generator with live preview, export options, and generation history.
+
+## Features
+
+- QR payload generators (URL, text, contact, Wi-Fi, email, SMS, geo, event, crypto)
+- Barcode generation for plain text
+- PNG/SVG download support
+- Generation history with:
+	- server-side pagination
+	- sorting (newest/oldest)
+	- date filtering constrained to last 60 days
+- Automatic history retention cleanup (records older than 60 days are removed)
+- Electron desktop packaging support (Windows NSIS + APPX)
+
+## Tech Stack
+
+- Next.js (App Router)
+- React + TypeScript
+- Prisma + SQLite
+- Tailwind CSS + shadcn/base-ui components
+- Electron + electron-builder
 
 ## Getting Started
 
-First, run the development server:
+1. Install dependencies:
+
+```bash
+npm install
+```
+
+2. Create/update Prisma client:
+
+```bash
+npm run prisma:generate
+```
+
+3. Run database migrations:
+
+```bash
+npm run prisma:migrate
+```
+
+4. Start the app:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open http://localhost:3000
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## History Retention and Memory Management
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- History queries are paginated on the server to avoid loading large datasets into the client.
+- Only a single page of history is loaded at a time (default page size: 10).
+- A retention cleanup runs automatically during history read and save actions.
+- Any record older than 60 days is deleted automatically.
+- Date filters in UI are restricted to the same 60-day window.
+- For packaged desktop builds, runtime SQLite is stored in user AppData (`%APPDATA%/Qrohl/history.db`) to avoid write-permission issues in installation directories.
 
-## Learn More
+## Scripts
 
-To learn more about Next.js, take a look at the following resources:
+- `npm run dev` - start Next.js dev server
+- `npm run build` - production build
+- `npm run start` - run production server
+- `npm run lint` - run ESLint
+- `npm run prisma:generate` - generate Prisma client
+- `npm run prisma:migrate` - run Prisma migration in dev
+- `npm run prisma:studio` - open Prisma Studio
+- `npm run dev:electron` - run Next.js + Electron locally
+- `npm run electron:assets` - generate branded Windows packaging assets
+- `npm run build:electron` - build Windows desktop packages
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Desktop Packaging (Electron)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Run in development:
 
-## Deploy on Vercel
+```bash
+npm run dev:electron
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Generate branding assets before packaging:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+npm run electron:assets
+```
+
+Build Windows packages:
+
+```bash
+npm run build:electron
+```
+
+### Windows packaging safety checks
+
+- Always run `npm run electron:assets` before packaging.
+- The asset generator validates required icon sizes (including `Square44x44Logo.png` and `Square150x150Logo.png`) and fails if mismatched.
+- Submit signed `.appx`/`.msix` packages to Store ingestion workflows.
+- Avoid relying on unsigned `.exe` artifacts for Store certification.
+
+For Microsoft Store reviewer notes (`runFullTrust`) and certification checklist, see:
+
+- `docs/microsoft-store-certification-notes.md`
