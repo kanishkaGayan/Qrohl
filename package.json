@@ -2,14 +2,14 @@
   "name": "qrohl",
   "version": "1.1.12",
   "description": "QR and barcode generation tool",
-  "homepage": "https://github.com/kanishkaGayan/QR_Bar_code_generator",
+  "homepage": "https://github.com/kanishkaGayan/Qrohl",
   "author": {
     "name": "Kanishka Meddegoda",
     "email": "gayanmedde2022@gmail.com"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/kanishkaGayan/QR_Bar_code_generator.git"
+    "url": "https://github.com/kanishkaGayan/Qrohl.git"
   },
   "private": true,
   "main": "electron/main.mjs",
@@ -121,11 +121,13 @@
     "appx": {
       "applicationId": "Qrohl",
       "displayName": "Qrohl",
-      "publisherDisplayName": "Qrohl",
-      "identityName": "Qrohl.Desktop",
-      "publisher": "CN=Qrohl",
+      "publisherDisplayName": "Kanishka Meddegoda",
+      "identityName": "KanishkaMeddegoda.Qrohl",
+      "publisher": "CN=Kanishka Meddegoda",
       "backgroundColor": "#111827",
-      "setBuildNumber": false
+      "defaultLanguage": "en-US",
+      "setBuildNumber": false,
+      "capabilities": ["runFullTrust"]
     }
   }
 }
