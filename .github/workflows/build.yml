@@ -1,4 +1,4 @@
-name: Build Windows AppX
+name: Build All Packages and Release
 
 on:
   push:
@@ -11,9 +11,11 @@ permissions:
   contents: write
 
 jobs:
-  build-appx:
-    name: Build Windows AppX Package
+  build-windows:
+    name: Build Windows (AppX + NSIS)
     runs-on: windows-latest
+    outputs:
+      artifacts: ${{ steps.files.outputs.artifacts }}
     
     steps:
       - uses: actions/checkout@v4
@@ -33,20 +35,124 @@ jobs:
       - name: Build Next.js + Electron
         run: npm run build && npm run prepare:packaging && npm run electron:assets
       
-      - name: Build AppX package
-        run: npx electron-builder --win appx --publish never
+      - name: Build Windows packages (AppX + NSIS)
+        run: npx electron-builder --win appx nsis --publish never
       
-      - name: Upload AppX artifact
+      - name: List artifacts
+        id: files
+        shell: bash
+        run: |
+          ls -lh dist/
+          echo "artifacts=$(ls dist/*.{appx,exe} | tr '\n' ',')" >> $GITHUB_OUTPUT
+      
+      - name: Upload Windows artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: qrohl-appx
-          path: dist/*.appx
-          retention-days: 30
+          name: windows-packages
+          path: |
+            dist/*.appx
+            dist/*.exe
+          retention-days: 5
+
+  build-linux:
+    name: Build Linux (AppImage + Snap)
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
       
-      - name: Create Release (on tag)
-        if: startsWith(github.ref, 'refs/tags/v')
-        uses: softprops/action-gh-release@v1
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          files: dist/*.appx
+          node-version: '20'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm install
+      
+      - name: Generate Prisma client
+        run: npm run prisma:generate
+      
+      - name: Build Next.js + Electron
+        run: npm run build && npm run prepare:packaging && npm run electron:assets
+      
+      - name: Build Linux AppImage
+        run: npx electron-builder --linux AppImage --publish never
+      
+      - name: Build Linux Snap
+        run: npx electron-builder --linux snap --publish never
+      
+      - name: List artifacts
+        run: ls -lh dist/
+      
+      - name: Upload Linux artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-packages
+          path: |
+            dist/*.AppImage
+            dist/*.snap
+          retention-days: 5
+
+  create-release:
+    name: Create Release with All Artifacts
+    needs: [build-windows, build-linux]
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'push'
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Download Windows artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: windows-packages
+          path: ./artifacts/windows
+      
+      - name: Download Linux artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: linux-packages
+          path: ./artifacts/linux
+      
+      - name: List all artifacts
+        run: |
+          echo "=== Windows Packages ===" && ls -lh ./artifacts/windows/ || true
+          echo "=== Linux Packages ===" && ls -lh ./artifacts/linux/ || true
+      
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/v')
+        with:
+          files: |
+            ./artifacts/windows/*.appx
+            ./artifacts/windows/*.exe
+            ./artifacts/linux/*.AppImage
+            ./artifacts/linux/*.snap
           draft: false
           prerelease: ${{ contains(github.ref, 'alpha') || contains(github.ref, 'beta') }}
+          body: |
+            # Qrohl Release ${{ github.ref_name }}
+            
+            ## 📦 Packages Included
+            
+            ### Windows
+            - **AppX Package** - For Microsoft Store
+            - **NSIS Installer** - Traditional Windows installer
+            
+            ### Linux
+            - **AppImage** - Universal Linux package
+            - **Snap** - Ubuntu/Linux snap package
+            
+            ## Installation Instructions
+            
+            **Windows:**
+            - Use the `.appx` file for Microsoft Store
+            - Use the `.exe` for direct installation
+            
+            **Linux:**
+            - Use the `.AppImage` for universal Linux
+            - Use the `.snap` for Ubuntu/Fedora (Ubuntu: `sudo snap install --dangerous *.snap`)
+            
+            ---
+            Built with Next.js + Electron
