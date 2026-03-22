@@ -125,7 +125,7 @@
       "identityName": "KanishkaMeddegoda.Qrohl",
       "publisher": "CN=Kanishka Meddegoda",
       "backgroundColor": "#111827",
-      "defaultLanguage": "en-US",
+      "languages": ["en-US"],
       "setBuildNumber": false,
       "capabilities": ["runFullTrust"]
     }
