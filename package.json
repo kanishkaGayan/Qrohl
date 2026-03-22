@@ -1,6 +1,6 @@
 {
   "name": "qrohl",
-  "version": "1.1.12",
+  "version": "1.1.121",
   "description": "QR and barcode generation tool",
   "homepage": "https://github.com/kanishkaGayan/Qrohl",
   "author": {
@@ -123,11 +123,15 @@
       "displayName": "Qrohl",
       "publisherDisplayName": "Kanishka Meddegoda",
       "identityName": "KanishkaMeddegoda.Qrohl",
-      "publisher": "CN=Kanishka Meddegoda",
+      "publisher": "CN=67960D19-3842-47BB-94EC-8FDE889DF594",
       "backgroundColor": "#111827",
-      "languages": ["en-US"],
+      "languages": [
+        "en-US"
+      ],
       "setBuildNumber": false,
-      "capabilities": ["runFullTrust"]
+      "capabilities": [
+        "runFullTrust"
+      ]
     }
   }
 }
