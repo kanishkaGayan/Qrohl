@@ -9,8 +9,19 @@ export default async function Home() {
   });
 
   return (
-    <div className="min-h-screen bg-muted/20">
+    <div className="min-h-screen bg-muted/20 flex flex-col">
       <GeneratorDashboard initialHistory={history} />
+      <footer className="mt-auto border-t border-border/60 px-4 py-3 text-center text-xs text-muted-foreground">
+        © 2026 Qrohl. All rights reserved. | Made by {" "}
+        <a
+          href="https://kanishka.dev/"
+          target="_blank"
+          rel="noreferrer noopener"
+          className="underline underline-offset-2 hover:text-foreground"
+        >
+          Kanishka Meddegoda
+        </a>
+      </footer>
     </div>
   );
 }

@@ -11,17 +11,20 @@ Qrohl stores its runtime database in the user's AppData path (`%APPDATA%/Qrohl/h
 
 ## Pre-submit checklist
 
-1. Run `npm run electron:assets` before every Store build.
-2. Build with `npm run build:electron` so AppX/MSIX package uses branded icons from `build/`.
-3. Verify package contains these assets (no defaults):
+1. Place your high-resolution source logo at `build/icon-source.png` (fallback is `public/icon.png`).
+2. Run `npm run electron:assets` before every Store build.
+3. Build with `npm run build:electron` so AppX/MSIX package uses branded icons from `build/appx/`.
+4. Verify package contains these assets (no defaults):
    - `Square44x44Logo.png`
-   - `Square50x50Logo.png`
    - `Square150x150Logo.png`
-   - `Square310x310Logo.png`
+   - `SmallTile.png`
+   - `LargeTile.png`
    - `Wide310x150Logo.png`
    - `StoreLogo.png`
-4. Run WACK (Windows App Certification Kit) locally against the generated `.appx`/`.msixupload`.
-5. Upload a signed `.appx`/`.msix` package directly in Partner Center (avoid unsigned `.exe` submissions).
-6. Keep app name and listing metadata aligned with branding:
+   - `SplashScreen.png`
+5. Verify manifest path: `build/appx/appxmanifest.xml` is used through `build.appx.customManifestPath`.
+6. Run WACK (Windows App Certification Kit) locally against the generated `.appx`/`.msixupload`.
+7. Upload a signed `.appx`/`.msix` package directly in Partner Center (avoid unsigned `.exe` submissions).
+8. Keep app name and listing metadata aligned with branding:
    - App name: **Qrohl**
    - Slogan: **The Whole Package for QR and Barcodes.**

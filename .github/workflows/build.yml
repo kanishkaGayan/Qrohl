@@ -1,4 +1,4 @@
-name: Build All Packages and Release
+name: Build Packages and Release
 
 on:
   push:
@@ -6,16 +6,17 @@ on:
       - main
     tags:
       - 'v*'
+  pull_request:
+    branches:
+      - main
 
 permissions:
   contents: write
 
 jobs:
   build-windows:
-    name: Build Windows (AppX + NSIS)
+    name: Build Windows (NSIS + AppX)
     runs-on: windows-latest
-    outputs:
-      artifacts: ${{ steps.files.outputs.artifacts }}
     
     steps:
       - uses: actions/checkout@v4
@@ -27,23 +28,17 @@ jobs:
           cache: 'npm'
       
       - name: Install dependencies
-        run: npm install
+        run: npm ci
       
       - name: Generate Prisma client
         run: npm run prisma:generate
       
-      - name: Build Next.js + Electron
-        run: npm run build && npm run prepare:packaging && npm run electron:assets
-      
-      - name: Build Windows packages (AppX + NSIS)
-        run: npx electron-builder --win appx nsis --publish never
+      - name: Build Windows packages
+        run: npm run build:electron
       
       - name: List artifacts
-        id: files
         shell: bash
-        run: |
-          ls -lh dist/
-          echo "artifacts=$(ls dist/*.{appx,exe} | tr '\n' ',')" >> $GITHUB_OUTPUT
+        run: ls -lh dist/
       
       - name: Upload Windows artifacts
         uses: actions/upload-artifact@v4
@@ -55,7 +50,7 @@ jobs:
           retention-days: 5
 
   build-linux:
-    name: Build Linux (AppImage + Snap)
+    name: Build Linux (AppImage)
     runs-on: ubuntu-latest
     
     steps:
@@ -68,19 +63,13 @@ jobs:
           cache: 'npm'
       
       - name: Install dependencies
-        run: npm install
+        run: npm ci
       
       - name: Generate Prisma client
         run: npm run prisma:generate
       
-      - name: Build Next.js + Electron
-        run: npm run build && npm run prepare:packaging && npm run electron:assets
-      
-      - name: Build Linux AppImage
-        run: npx electron-builder --linux AppImage --publish never
-      
-      - name: Build Linux Snap
-        run: npx electron-builder --linux snap --publish never
+      - name: Build Linux package
+        run: npm run build:appimage
       
       - name: List artifacts
         run: ls -lh dist/
@@ -91,18 +80,15 @@ jobs:
           name: linux-packages
           path: |
             dist/*.AppImage
-            dist/*.snap
           retention-days: 5
 
   create-release:
     name: Create Release with All Artifacts
     needs: [build-windows, build-linux]
     runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'push'
+    if: startsWith(github.ref, 'refs/tags/v')
     
     steps:
-      - uses: actions/checkout@v4
-      
       - name: Download Windows artifacts
         uses: actions/download-artifact@v4
         with:
@@ -122,13 +108,11 @@ jobs:
       
       - name: Create Release
         uses: softprops/action-gh-release@v1
-        if: startsWith(github.ref, 'refs/tags/v')
         with:
           files: |
             ./artifacts/windows/*.appx
             ./artifacts/windows/*.exe
             ./artifacts/linux/*.AppImage
-            ./artifacts/linux/*.snap
           draft: false
           prerelease: ${{ contains(github.ref, 'alpha') || contains(github.ref, 'beta') }}
           body: |
@@ -142,7 +126,6 @@ jobs:
             
             ### Linux
             - **AppImage** - Universal Linux package
-            - **Snap** - Ubuntu/Linux snap package
             
             ## Installation Instructions
             
@@ -152,7 +135,6 @@ jobs:
             
             **Linux:**
             - Use the `.AppImage` for universal Linux
-            - Use the `.snap` for Ubuntu/Fedora (Ubuntu: `sudo snap install --dangerous *.snap`)
             
             ---
             Built with Next.js + Electron

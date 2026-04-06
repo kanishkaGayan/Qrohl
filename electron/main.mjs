@@ -9,9 +9,12 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 app.commandLine.appendSwitch("lang", "en-US");
-app.commandLine.appendSwitch("disable-gpu");
-app.commandLine.appendSwitch("disable-software-rasterizer");
-app.disableHardwareAcceleration();
+app.commandLine.appendSwitch("accept-lang", "en-US,en");
+
+if (process.platform === "linux") {
+  app.commandLine.appendSwitch("disable-gpu");
+  app.disableHardwareAcceleration();
+}
 
 const isDev = !app.isPackaged;
 const configuredPort = Number(process.env.PORT || "3000");
@@ -151,12 +154,21 @@ function createMainWindow() {
     minWidth: 980,
     minHeight: 680,
     title: "Qrohl",
+    show: false,
+    backgroundColor: "#111827",
     icon: path.join(__dirname, "..", "public", "icon.png"),
     webPreferences: {
       preload: path.join(__dirname, "preload.mjs"),
       contextIsolation: true,
       nodeIntegration: false,
       sandbox: false,
+      spellcheck: false,
+      defaultFontFamily: {
+        standard: "DejaVu Sans",
+        serif: "DejaVu Serif",
+        sansSerif: "DejaVu Sans",
+        monospace: "DejaVu Sans Mono",
+      },
     },
     autoHideMenuBar: true,
   });
@@ -165,6 +177,10 @@ function createMainWindow() {
 
   const appUrl = getAppUrl();
   mainWindow.loadURL(appUrl);
+
+  mainWindow.once("ready-to-show", () => {
+    mainWindow?.show();
+  });
 
   let reloadAttempts = 0;
   mainWindow.webContents.on("did-fail-load", async () => {
@@ -178,7 +194,7 @@ function createMainWindow() {
     mainWindow?.loadURL(getAppUrl());
   });
 
-  if (isDev) {
+  if (isDev && process.env.ELECTRON_DEVTOOLS === "1") {
     mainWindow.webContents.openDevTools({ mode: "detach" });
   }
 }

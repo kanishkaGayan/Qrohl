@@ -88,6 +88,13 @@ Generate branding assets before packaging:
 npm run electron:assets
 ```
 
+Source logo placement (single source of truth):
+
+- Preferred: `build/icon-source.png` (recommended for Store packaging)
+- Fallback: `public/icon.png`
+
+The script auto-generates all AppX tile assets into `build/appx/` (including Store logo, tile sizes, targetsize variants, and splash screen).
+
 Build Windows packages:
 
 ```bash
@@ -97,7 +104,8 @@ npm run build:electron
 ### Windows packaging safety checks
 
 - Always run `npm run electron:assets` before packaging.
-- The asset generator validates required icon sizes (including `Square44x44Logo.png` and `Square150x150Logo.png`) and fails if mismatched.
+- AppX custom assets must exist in `build/appx/` so `electron-builder` does not fall back to default Electron sample images.
+- The asset generator validates all generated icon sizes and fails if mismatched.
 - Submit signed `.appx`/`.msix` packages to Store ingestion workflows.
 - Avoid relying on unsigned `.exe` artifacts for Store certification.
 

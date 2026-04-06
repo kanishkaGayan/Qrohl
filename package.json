@@ -1,6 +1,6 @@
 {
   "name": "qrohl",
-  "version": "1.1.121",
+  "version": "1.1.122",
   "description": "QR and barcode generation tool",
   "homepage": "https://github.com/kanishkaGayan/Qrohl",
   "author": {
@@ -15,11 +15,11 @@
   "main": "electron/main.mjs",
   "productName": "Qrohl",
   "scripts": {
-    "dev": "next dev",
+    "dev": "cross-env PORT=3000 next dev --webpack --port 3000",
     "build": "next build",
     "start": "next start",
-    "dev:electron": "concurrently -k \"npm:dev\" \"npm:electron:dev\"",
-    "electron:dev": "wait-on tcp:3000 && cross-env LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 LANGUAGE=en_US DATABASE_URL=file:./dev.db electron .",
+    "dev:electron": "concurrently \"npm:dev\" \"npm:electron:dev\"",
+    "electron:dev": "wait-on tcp:3000 && cross-env ELECTRON_START_URL=http://localhost:3000 LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 LANGUAGE=en_US:en DATABASE_URL=file:./dev.db electron .",
     "prepare:packaging": "node scripts/prepare-packaged-next.mjs",
     "electron:assets": "node scripts/generate-electron-assets.mjs",
     "build:electron": "npm run build && npm run prepare:packaging && npm run electron:assets && electron-builder --win nsis appx --publish never",
@@ -57,7 +57,7 @@
     "@types/react-dom": "^19",
     "concurrently": "^9.2.1",
     "cross-env": "^10.1.0",
-    "electron": "^38.3.0",
+    "electron": "31.7.7",
     "electron-builder": "^26.0.12",
     "eslint": "^9",
     "eslint-config-next": "16.2.1",
@@ -123,6 +123,7 @@
       "displayName": "Qrohl",
       "publisherDisplayName": "Kanishka Meddegoda",
       "identityName": "KanishkaMeddegoda.Qrohl",
+      "customManifestPath": "appx/appxmanifest.xml",
       "publisher": "CN=67960D19-3842-47BB-94EC-8FDE889DF594",
       "backgroundColor": "#111827",
       "languages": [
